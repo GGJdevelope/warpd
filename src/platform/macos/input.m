@@ -363,6 +363,27 @@ static void update_keymap()
 
 	assert(kbd);
 
+	/*
+	 * Check if the current input source provides keyboard layout data.
+	 * Some input methods (e.g., Korean, Chinese, Japanese) don't provide
+	 * kTISPropertyUnicodeKeyLayoutData. In such cases, fall back to the
+	 * ASCII-capable keyboard layout to ensure keycodes can still be mapped.
+	 */
+	CFDataRef layout_data = TISGetInputSourceProperty(kbd, kTISPropertyUnicodeKeyLayoutData);
+	if (!layout_data) {
+		CFRelease(kbd);
+		kbd = TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+		assert(kbd);
+		layout_data = TISGetInputSourceProperty(kbd, kTISPropertyUnicodeKeyLayoutData);
+	}
+
+	/* If we still don't have layout data, bail out and preserve existing keymap */
+	if (!layout_data) {
+		CFRelease(kbd);
+		pthread_mutex_unlock(&keymap_mtx);
+		return;
+	}
+
 	for (code = 1; code < 256; code++) {
 		if (!valid_keycodes[code]) {
 			keymap[code].name[0] = 0;
@@ -370,8 +391,7 @@ static void update_keymap()
 			continue;
 		}
 
-		/* Blech */
-		CFDataRef layout_data = TISGetInputSourceProperty(kbd, kTISPropertyUnicodeKeyLayoutData);
+		/* Get the keyboard layout */
 		const UCKeyboardLayout *layout = (const UCKeyboardLayout *)CFDataGetBytePtr(layout_data);
 
 		UCKeyTranslate(layout, code-1, kUCKeyActionDisplay, 0, LMGetKbdType(),
@@ -452,6 +472,7 @@ static void update_keymap()
 
 	}
 
+	CFRelease(kbd);
 	pthread_mutex_unlock(&keymap_mtx);
 }
 
