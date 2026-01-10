@@ -13,7 +13,7 @@ CFLAGS:=-g\
        -DCOMMIT=\"$(COMMIT)\"\
        -D_DEFAULT_SOURCE  $(CFLAGS)
 
-CARGS := -Wl,-adhoc_codesign src/*.c src/platform/macos/*.m -framework cocoa -framework carbon $(CFLAGS)
+CARGS := -Wl,-adhoc_codesign src/*.c src/platform/macos/*.m -framework cocoa -framework carbon -Wl,-sectcreate,__TEXT,__info_plist,files/Info.plist $(CFLAGS)
 
 all:
 	$(CC) -o bin/warpd-arm -target arm64-apple-macos $(CARGS) && \

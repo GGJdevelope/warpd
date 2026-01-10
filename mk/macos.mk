@@ -4,11 +4,11 @@ CFILES=$(shell find src/*.c)
 OBJCFILES=$(shell find src/platform/macos -name '*.m')
 OBJECTS=$(CFILES:.c=.o) $(OBJCFILES:.m=.o)
 
-RELFLAGS=-Wl,-adhoc_codesign -framework cocoa -framework carbon
+RELFLAGS=-Wl,-adhoc_codesign -framework cocoa -framework carbon -Wl,-sectcreate,__TEXT,__info_plist,files/Info.plist
 
 all: $(OBJECTS)
 	-mkdir bin
-	$(CC) -o bin/warpd $(OBJECTS) -framework cocoa -framework carbon
+	$(CC) -o bin/warpd $(OBJECTS) -framework cocoa -framework carbon -Wl,-sectcreate,__TEXT,__info_plist,files/Info.plist
 	./codesign/sign.sh
 rel: clean
 	$(CC) -o bin/warpd-arm $(CFILES) $(OBJCFILES) -target arm64-apple-macos $(CFLAGS) $(RELFLAGS)

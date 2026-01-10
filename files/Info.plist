@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.warpd.warpd</string>
+	<key>CFBundleName</key>
+	<string>warpd</string>
+	<key>CFBundleVersion</key>
+	<string>1.3.5</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.3.5</string>
+	<key>CFBundleExecutable</key>
+	<string>warpd</string>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>warpd requires accessibility access to monitor and control keyboard and mouse input for modal keyboard-driven pointer manipulation.</string>
+	<key>NSInputMonitoringUsageDescription</key>
+	<string>warpd needs to monitor keyboard input to enable modal keyboard-driven pointer control and hotkey activation.</string>
+	<key>LSUIElement</key>
+	<true/>
+</dict>
+</plist>
