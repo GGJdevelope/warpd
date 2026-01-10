@@ -3,6 +3,7 @@
 - macos: Introduce launchd service (the user should no longer run warpd explicitly)
 - macos: Fix multi-user support
 - linux: Merge X/Wayland support into a single binary
+- linux/X11: Fix keyboard freeze when switching keyboard layouts (Korean/English)
 - Improve portrait mode support
 - Make the drag button configurable
 - Fix config key precedence bug
