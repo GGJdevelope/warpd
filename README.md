@@ -110,7 +110,9 @@ launchctl unload /Library/LaunchAgents/com.warpd.warpd.plist
 sudo make uninstall
 ```
 
-*Note:* warpd is now installed as a proper macOS application bundle at `/Applications/warpd.app`. This ensures it appears correctly in System Settings → Privacy & Security → Accessibility. On first run, you will be prompted to grant accessibility permissions. If you are upgrading from a previous version, you may need to run `sudo tccutil reset Accessibility` (this will remove all applications from your accessibility settings) and re-grant permissions to the new app bundle.
+*Note:* warpd is installed as a proper macOS application bundle at `/Applications/warpd.app`. This ensures it appears correctly in System Settings → Privacy & Security → Accessibility. A symlink is created at `/usr/local/bin/warpd` for command-line access, so you can still run `warpd` from the terminal as before.
+
+On first run, you will be prompted to grant accessibility permissions. If you are upgrading from a previous version, you may need to run `sudo tccutil reset Accessibility` (this will remove all applications from your accessibility settings) and re-grant permissions to the new app bundle.
 
 *Note 2:* Some programs (e.g iTerm) have a 'secure input mode' that may need to be
 disabled in order for warpd to work properly.
