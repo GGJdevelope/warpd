@@ -5,6 +5,7 @@
  */
 
 #include "X.h"
+#include <X11/XKBlib.h>
 
 static int nr_grabbed_device_ids = 0;
 static int grabbed_device_ids[64];
@@ -299,7 +300,7 @@ uint8_t xmods_to_mods(int xmods)
 
 uint8_t get_code_modifier(uint8_t code)
 {
-	KeySym sym = XKeycodeToKeysym(dpy, code, 0);
+	KeySym sym = XkbKeycodeToKeysym(dpy, code, 0, 0);
 	switch (sym) {
 	case XK_Control_L:
 	case XK_Control_R:
@@ -335,6 +336,12 @@ struct input_event *x_input_next_event(int timeout)
 		xev = get_next_xev(timeout - elapsed);
 
 		if (xev) {
+			/* Handle keyboard mapping changes (e.g., Korean/English layout switching) */
+			if (xev->type == MappingNotify) {
+				XRefreshKeyboardMapping(&xev->xmapping);
+				continue;
+			}
+
 			int xmods;
 			code = process_xinput_event(xev, &state, &xmods);
 			if (code && state != 2) {
@@ -376,23 +383,31 @@ struct input_event *x_input_wait(struct input_event *events, size_t sz)
 	while (1) {
 		XEvent *xev = get_next_xev(100);
 
-		if (xev && (xev->type == KeyPress || xev->type == KeyRelease)) {
-			ev.code = (uint8_t)xev->xkey.keycode;
-			ev.mods = xmods_to_mods(xev->xkey.state);
-			ev.pressed = xev->type == KeyPress;
+		if (xev) {
+			/* Handle keyboard mapping changes (e.g., Korean/English layout switching) */
+			if (xev->type == MappingNotify) {
+				XRefreshKeyboardMapping(&xev->xmapping);
+				continue;
+			}
 
-			x_input_grab_keyboard();
+			if (xev->type == KeyPress || xev->type == KeyRelease) {
+				ev.code = (uint8_t)xev->xkey.keycode;
+				ev.mods = xmods_to_mods(xev->xkey.state);
+				ev.pressed = xev->type == KeyPress;
 
-			ret = &ev;
-			goto exit;
-		} else {
-			size_t i;
-			for (i = 0; i < nr_monitored_files; i++) {
-				long mtime = x_get_mtime(monitored_files[i].path);
-				if (mtime != monitored_files[i].mtime) {
-					monitored_files[i].mtime = mtime;
-					goto exit;
-				}
+				x_input_grab_keyboard();
+
+				ret = &ev;
+				goto exit;
+			}
+		}
+		
+		size_t i;
+		for (i = 0; i < nr_monitored_files; i++) {
+			long mtime = x_get_mtime(monitored_files[i].path);
+			if (mtime != monitored_files[i].mtime) {
+				monitored_files[i].mtime = mtime;
+				goto exit;
 			}
 		}
 	}
@@ -440,7 +455,7 @@ uint8_t x_input_lookup_code(const char *name, int *shifted)
 	
 	code = XKeysymToKeycode(dpy, sym);
 
-	if (XKeycodeToKeysym(dpy, code, 0) != sym)
+	if (XkbKeycodeToKeysym(dpy, code, 0, 0) != sym)
 		*shifted = 1;
 	else
 		*shifted = 0;
@@ -453,7 +468,7 @@ const char *x_input_lookup_name(uint8_t code, int shifted)
 {
 	size_t i;
 	const char *name;
-	KeySym sym = XKeycodeToKeysym(dpy, code, shifted);
+	KeySym sym = XkbKeycodeToKeysym(dpy, code, 0, shifted);
 	if (!sym)
 		return NULL;
 
