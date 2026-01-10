@@ -89,7 +89,8 @@ curl -L https://github.com/rvaiya/warpd/releases/download/v1.3.5/warpd-1.3.5-osx
 Uninstallation:
 
 ```
-sudo rm /usr/local/bin/warpd /usr/local/share/man/man1/warpd.1.gz /Library/LaunchAgents/com.warpd.warpd.plist
+launchctl unload /Library/LaunchAgents/com.warpd.warpd.plist
+sudo rm -rf /Applications/warpd.app /usr/local/bin/warpd /usr/local/share/man/man1/warpd.1.gz /Library/LaunchAgents/com.warpd.warpd.plist
 ```
 
 or (from source)
@@ -105,15 +106,11 @@ make && sudo make install && launchctl load /Library/LaunchAgents/com.warpd.warp
 Uninstallation:
 
 ```
+launchctl unload /Library/LaunchAgents/com.warpd.warpd.plist
 sudo make uninstall
 ```
 
-*Note:* On initialization you may be prompted to add the warpd binary to your
-accessibility settings. **If you are upgrading it may also be necessary to run
-`sudo tccutil reset Accessibility` (this will remove all applications
-from your accessibility settings)**. The service is now also managed by a
-launchd service (see below) and should not be explicitly started by the
-user.
+*Note:* warpd is now installed as a proper macOS application bundle at `/Applications/warpd.app`. This ensures it appears correctly in System Settings → Privacy & Security → Accessibility. On first run, you will be prompted to grant accessibility permissions. If you are upgrading from a previous version, you may need to run `sudo tccutil reset Accessibility` (this will remove all applications from your accessibility settings) and re-grant permissions to the new app bundle.
 
 *Note 2:* Some programs (e.g iTerm) have a 'secure input mode' that may need to be
 disabled in order for warpd to work properly.

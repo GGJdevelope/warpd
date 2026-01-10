@@ -10,7 +10,7 @@
 	<string>Interactive</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/usr/local/bin/warpd</string>
+		<string>/Applications/warpd.app/Contents/MacOS/warpd</string>
 		<string>-f</string>
 	</array>
 	<key>KeepAlive</key>
