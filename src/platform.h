@@ -94,6 +94,13 @@ struct platform {
 	* is called.
 	*/
 	void (*commit)();
+
+	/*
+	 * Display an error modal dialog to the user.
+	 * This function should block until the user dismisses the dialog
+	 * or a timeout occurs (recommended: 10 seconds).
+	 */
+	void (*show_error_modal)(const char *title, const char *message);
 };
 
 void platform_run(int (*main) (struct platform *platform));

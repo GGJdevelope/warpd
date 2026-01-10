@@ -18,6 +18,17 @@ uint64_t get_time_us()
 	return ts.tv_nsec / 1E3 + ts.tv_sec * 1E6;
 }
 
+void show_error_modal(const char *title, const char *message)
+{
+	/* Log to stderr as well for debugging/logging purposes */
+	fprintf(stderr, "ERROR: %s: %s\n", title, message);
+
+	/* Show modal if platform is initialized and supports it */
+	if (platform && platform->show_error_modal) {
+		platform->show_error_modal(title, message);
+	}
+}
+
 
 const char *get_data_path(const char *file)
 {

@@ -186,6 +186,7 @@ static void *mainloop(void *arg)
 		.screen_list = osx_screen_list,
 		.scroll = osx_scroll,
 		.monitor_file = osx_monitor_file,
+		.show_error_modal = osx_show_error_modal,
 	};
 
 	main(&platform);
@@ -208,3 +209,21 @@ void platform_run(int (*main)(struct platform *platform))
 
 	[NSApp run];
 }
+
+void osx_show_error_modal(const char *title, const char *message)
+{
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSAlert *alert = [[NSAlert alloc] init];
+		[alert setMessageText:[NSString stringWithUTF8String:title]];
+		[alert setInformativeText:[NSString stringWithUTF8String:message]];
+		[alert setAlertStyle:NSAlertStyleCritical];
+		[alert addButtonWithTitle:@"OK"];
+		
+		/* Run the alert modally with a timeout */
+		[alert runModal];
+	});
+	
+	/* Give the modal time to display */
+	sleep(1);
+}
+

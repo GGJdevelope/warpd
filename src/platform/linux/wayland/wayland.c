@@ -235,4 +235,93 @@ void wayland_init(struct platform *platform)
 	platform->screen_get_dimensions = way_screen_get_dimensions;
 	platform->screen_list = way_screen_list;
 	platform->scroll = way_scroll;
+	platform->show_error_modal = way_show_error_modal;
+}
+
+void way_show_error_modal(const char *title, const char *message)
+{
+	/* For Wayland, we'll create a simple overlay window with the error message */
+	if (nr_screens == 0 || !wl.dpy)
+		return;
+
+	struct screen *scr = &screens[0];
+	int win_w = 400;
+	int win_h = 150;
+	int x = (scr->w - win_w) / 2;
+	int y = (scr->h - win_h) / 2;
+
+	/* Create a surface for the error modal */
+	struct surface *sfc = create_surface(scr, x, y, win_w, win_h, 1);
+	if (!sfc)
+		return;
+
+	/* Get cairo context from screen */
+	cairo_t *cr = scr->cr;
+	if (!cr)
+		return;
+
+	/* Draw white background */
+	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+	cairo_rectangle(cr, x, y, win_w, win_h);
+	cairo_fill(cr);
+
+	/* Draw border */
+	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+	cairo_set_line_width(cr, 2.0);
+	cairo_rectangle(cr, x, y, win_w, win_h);
+	cairo_stroke(cr);
+
+	/* Draw title */
+	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+	cairo_select_font_face(cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL,
+			       CAIRO_FONT_WEIGHT_BOLD);
+	cairo_set_font_size(cr, 14.0);
+	cairo_move_to(cr, x + 10, y + 25);
+	cairo_show_text(cr, title);
+
+	/* Draw message */
+	cairo_select_font_face(cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL,
+			       CAIRO_FONT_WEIGHT_NORMAL);
+	cairo_set_font_size(cr, 12.0);
+
+	int text_y = y + 50;
+	const char *line_start = message;
+	char line_buf[256];
+
+	while (*line_start) {
+		const char *line_end = strchr(line_start, '\n');
+		int line_len;
+
+		if (line_end) {
+			line_len = line_end - line_start;
+			if (line_len > 255) line_len = 255;
+			strncpy(line_buf, line_start, line_len);
+			line_buf[line_len] = '\0';
+			line_start = line_end + 1;
+		} else {
+			strncpy(line_buf, line_start, 255);
+			line_buf[255] = '\0';
+			line_start += strlen(line_start);
+		}
+
+		cairo_move_to(cr, x + 10, text_y);
+		cairo_show_text(cr, line_buf);
+		text_y += 20;
+
+		if (!*line_start)
+			break;
+	}
+
+	/* Draw dismiss hint */
+	cairo_move_to(cr, x + 10, y + win_h - 20);
+	cairo_show_text(cr, "Will auto-dismiss in 10 seconds...");
+
+	surface_show(sfc);
+	wl_display_flush(wl.dpy);
+
+	/* Wait for 10 seconds */
+	sleep(10);
+
+	destroy_surface(sfc);
+	wl_display_flush(wl.dpy);
 }

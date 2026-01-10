@@ -141,9 +141,15 @@ static uint8_t process_xinput_event(XEvent *ev, int *state, int *mods)
 static const char *xerr_key = NULL;
 static int input_xerr(Display *dpy, XErrorEvent *ev)
 {
-	fprintf(stderr,
-		"ERROR: Failed to grab %s (ensure it isn't mapped by another application)\n",
+	char error_msg[256];
+	snprintf(error_msg, sizeof(error_msg),
+		"Failed to grab key: %s\n\n"
+		"Make sure it isn't mapped by another application.",
 		xerr_key);
+	
+	/* Show error modal */
+	x_show_error_modal("Keyboard Grab Failed", error_msg);
+	
 	return 0;
 }
 

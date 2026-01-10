@@ -201,7 +201,9 @@ void x_init(struct platform *platform)
 {
 	dpy = XOpenDisplay(NULL);
 	if (!dpy) {
-		fprintf(stderr, "Could not connect to X server\n");
+		/* Since we can't show a modal without X11, just use fprintf */
+		fprintf(stderr, "ERROR: Could not connect to X server\n");
+		fprintf(stderr, "Please make sure X11 is running and DISPLAY is set correctly.\n");
 		exit(-1);
 	}
 
@@ -231,4 +233,104 @@ void x_init(struct platform *platform)
 	platform->screen_get_dimensions = x_screen_get_dimensions;
 	platform->screen_list = x_screen_list;
 	platform->scroll = x_scroll;
+	platform->show_error_modal = x_show_error_modal;
+}
+
+void x_show_error_modal(const char *title, const char *message)
+{
+	if (!dpy)
+		return;
+
+	Window root = DefaultRootWindow(dpy);
+	int screen = DefaultScreen(dpy);
+	
+	/* Create a simple modal window */
+	int win_w = 400;
+	int win_h = 150;
+	int scr_w = DisplayWidth(dpy, screen);
+	int scr_h = DisplayHeight(dpy, screen);
+	int x = (scr_w - win_w) / 2;
+	int y = (scr_h - win_h) / 2;
+	
+	Window win = XCreateSimpleWindow(dpy, root, x, y, win_w, win_h, 2,
+					 BlackPixel(dpy, screen),
+					 WhitePixel(dpy, screen));
+	
+	/* Set window properties */
+	XStoreName(dpy, win, title);
+	XSelectInput(dpy, win, ExposureMask | KeyPressMask | ButtonPressMask);
+	
+	/* Set window type to dialog */
+	Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
+	Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+	XChangeProperty(dpy, win, wm_type, XA_ATOM, 32, PropModeReplace,
+			(unsigned char *)&wm_type_dialog, 1);
+	
+	/* Set it to be on top */
+	Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
+	Atom wm_state_above = XInternAtom(dpy, "_NET_WM_STATE_ABOVE", False);
+	XChangeProperty(dpy, win, wm_state, XA_ATOM, 32, PropModeReplace,
+			(unsigned char *)&wm_state_above, 1);
+	
+	XMapWindow(dpy, win);
+	XRaiseWindow(dpy, win);
+	XFlush(dpy);
+	
+	/* Draw the message */
+	GC gc = XCreateGC(dpy, win, 0, NULL);
+	XSetForeground(dpy, gc, BlackPixel(dpy, screen));
+	
+	/* Simple text rendering - split message into lines */
+	int text_y = 30;
+	const char *line_start = message;
+	char line_buf[256];
+	
+	while (*line_start) {
+		const char *line_end = strchr(line_start, '\n');
+		int line_len;
+		
+		if (line_end) {
+			line_len = line_end - line_start;
+			if (line_len > 255) line_len = 255;
+			strncpy(line_buf, line_start, line_len);
+			line_buf[line_len] = '\0';
+			line_start = line_end + 1;
+		} else {
+			strncpy(line_buf, line_start, 255);
+			line_buf[255] = '\0';
+			line_start += strlen(line_start);
+		}
+		
+		XDrawString(dpy, win, gc, 10, text_y, line_buf, strlen(line_buf));
+		text_y += 20;
+		
+		if (!*line_start)
+			break;
+	}
+	
+	XDrawString(dpy, win, gc, 10, win_h - 20, "Press any key or click to dismiss", 34);
+	XFlush(dpy);
+	
+	/* Wait for user input with 10 second timeout */
+	struct timeval tv;
+	fd_set fds;
+	int x11_fd = ConnectionNumber(dpy);
+	
+	tv.tv_sec = 10;
+	tv.tv_usec = 0;
+	
+	FD_ZERO(&fds);
+	FD_SET(x11_fd, &fds);
+	
+	int ret = select(x11_fd + 1, &fds, NULL, NULL, &tv);
+	
+	if (ret > 0) {
+		/* Wait for any event */
+		XEvent ev;
+		XNextEvent(dpy, &ev);
+	}
+	
+	XFreeGC(dpy, gc);
+	XDestroyWindow(dpy, win);
+	XFlush(dpy);
 }

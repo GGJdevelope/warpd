@@ -148,5 +148,7 @@ extern struct config_entry *config;
 int mode_loop(int initial_mode, int oneshot, int record_history);
 void daemon_loop(const char *config_path);
 
+void show_error_modal(const char *title, const char *message);
+
 extern struct platform *platform;
 #endif

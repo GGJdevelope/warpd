@@ -105,6 +105,7 @@ void x_copy_selection();
 void x_commit();
 void x_monitor_file(const char *path);
 long x_get_mtime(const char *path);
+void x_show_error_modal(const char *title, const char *message);
 
 extern struct monitored_file monitored_files[32];
 extern size_t nr_monitored_files;
