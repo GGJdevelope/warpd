@@ -364,9 +364,6 @@ void osx_input_ungrab_keyboard()
 
 void osx_input_grab_keyboard()
 {
-	if (grabbed)
-		return;
-
 	dispatch_sync(dispatch_get_main_queue(), ^{
 		save_and_switch_to_ascii_input();
 		grabbed = 1;
