@@ -56,6 +56,14 @@ static void write_message(int fd, void *msg, ssize_t sz)
 /*
  * Save the current input source and switch to ASCII-capable input source.
  * This prevents IME freezing when warpd grabs the keyboard.
+ * 
+ * The issue: When Korean IME (or other non-ASCII input methods) is active,
+ * grabbing the keyboard can leave the IME in an intermediate composition state.
+ * Since warpd blocks events during grab, the IME never receives the proper
+ * termination events, causing keyboard input to freeze.
+ * 
+ * The solution: Temporarily switch to an ASCII-capable input source before
+ * grabbing, which cleanly terminates any active IME composition.
  */
 static void save_and_switch_to_ascii_input()
 {
@@ -76,7 +84,7 @@ static void save_and_switch_to_ascii_input()
 		return;
 	}
 
-	/* Save current input source */
+	/* Save current input source for later restoration */
 	saved_input_source = current; /* Transfer ownership */
 	
 	/* Switch to ASCII-capable input source */
@@ -85,6 +93,10 @@ static void save_and_switch_to_ascii_input()
 		TISSelectInputSource(ascii_source);
 		CFRelease(ascii_source);
 		ime_switched = 1;
+	} else {
+		/* Failed to get ASCII source, release saved source */
+		CFRelease(saved_input_source);
+		saved_input_source = NULL;
 	}
 }
 
