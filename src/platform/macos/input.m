@@ -64,6 +64,8 @@ static void write_message(int fd, void *msg, ssize_t sz)
  * 
  * The solution: Temporarily switch to an ASCII-capable input source before
  * grabbing, which cleanly terminates any active IME composition.
+ * 
+ * NOTE: This function must be called from the main queue (via dispatch_sync).
  */
 static void save_and_switch_to_ascii_input()
 {
@@ -79,14 +81,17 @@ static void save_and_switch_to_ascii_input()
 	CFBooleanRef is_ascii_capable = TISGetInputSourceProperty(current, kTISPropertyInputSourceIsASCIICapable);
 	
 	/* Property check: ensure we got a valid boolean property */
-	if (!is_ascii_capable || CFBooleanGetValue(is_ascii_capable)) {
-		/* Already ASCII-capable (or property not available, assume ASCII), no need to switch */
+	if (is_ascii_capable && CFBooleanGetValue(is_ascii_capable)) {
+		/* Already ASCII-capable, no need to switch */
 		CFRelease(current);
 		return;
 	}
+	
+	/* If property is NULL, assume non-ASCII and proceed with switch */
 
 	/* Save current input source for later restoration */
-	saved_input_source = current; /* Transfer ownership */
+	/* Note: Ownership of 'current' is transferred to 'saved_input_source' */
+	saved_input_source = current;
 	
 	/* Switch to ASCII-capable input source */
 	TISInputSourceRef ascii_source = TISCopyCurrentASCIICapableKeyboardInputSource();
@@ -103,6 +108,8 @@ static void save_and_switch_to_ascii_input()
 
 /*
  * Restore the previously saved input source.
+ * 
+ * NOTE: This function must be called from the main queue (via dispatch_sync).
  */
 static void restore_input_source()
 {
