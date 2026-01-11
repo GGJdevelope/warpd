@@ -78,8 +78,9 @@ static void save_and_switch_to_ascii_input()
 	/* Check if current source is ASCII-capable */
 	CFBooleanRef is_ascii_capable = TISGetInputSourceProperty(current, kTISPropertyInputSourceIsASCIICapable);
 	
-	if (is_ascii_capable && CFBooleanGetValue(is_ascii_capable)) {
-		/* Already ASCII-capable, no need to switch */
+	/* Property check: ensure we got a valid boolean property */
+	if (!is_ascii_capable || CFBooleanGetValue(is_ascii_capable)) {
+		/* Already ASCII-capable (or property not available, assume ASCII), no need to switch */
 		CFRelease(current);
 		return;
 	}
