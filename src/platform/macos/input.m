@@ -366,8 +366,10 @@ void osx_input_grab_keyboard()
 {
 	dispatch_sync(dispatch_get_main_queue(), ^{
 		save_and_switch_to_ascii_input();
-		grabbed = 1;
-		grabbed_time = get_time_ms();
+		if (!grabbed) {
+			grabbed = 1;
+			grabbed_time = get_time_ms();
+		}
 	});
 }
 
