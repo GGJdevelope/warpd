@@ -7,6 +7,16 @@ On macOS 10.15 (Catalina) and later, applications need to be properly bundled as
 
 Simply embedding an `Info.plist` into a standalone binary using linker flags is no longer sufficient.
 
+### Specific Issue Fixed
+When running `warpd -f` (foreground mode) via the symlink at `/usr/local/bin/warpd`, macOS TCC (Transparency, Consent, and Control) may not properly associate the running process with the app bundle at `/Applications/warpd.app`. This causes:
+1. The accessibility permission prompt to appear correctly
+2. **But** the app fails to show up in the System Settings → Privacy & Security → Accessibility list
+
+This issue was resolved by:
+- Signing the entire app bundle (not just the binary)
+- Explicitly activating the app when running in foreground mode
+- Verifying the bundle identifier at startup
+
 ## Solution
 The build system has been updated to create a proper macOS application bundle structure:
 
@@ -25,6 +35,7 @@ warpd.app/
    - Build process now creates `bin/warpd.app` with proper bundle structure
    - Binary is placed in `warpd.app/Contents/MacOS/`
    - `Info.plist` is copied to `warpd.app/Contents/`
+   - **The entire app bundle is now code-signed** (not just the binary) for proper TCC recognition
    - Symlink created at `bin/warpd` for convenience
    - Install target copies the `.app` bundle to `/Applications/`
    - Symlink created at `/usr/local/bin/warpd` pointing to the bundle
@@ -34,10 +45,16 @@ warpd.app/
 
 3. **Updated `codesign/sign.sh`**:
    - Made more robust to handle signing errors gracefully
-   - Accepts binary path as argument
+   - Accepts binary or bundle path as argument
+   - **Now signs the entire app bundle for proper TCC database registration**
    - Falls back to ad-hoc signing if certificate not available
 
-4. **Updated `README.md`**:
+4. **Updated `src/platform/macos/macos.m`**:
+   - Added bundle identifier verification at startup
+   - **When running in foreground mode (`-f`), explicitly activates the app** to ensure TCC visibility
+   - Logs bundle identifier for debugging purposes
+
+5. **Updated `README.md`**:
    - Updated installation and uninstallation instructions
    - Added note about the app bundle location
    - Clarified permission requirements
