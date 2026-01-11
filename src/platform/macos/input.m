@@ -442,8 +442,19 @@ static void update_keymap()
 	UniCharCount len;
 	CFStringRef str;
 	TISInputSourceRef kbd = TISCopyCurrentKeyboardLayoutInputSource();
+	CFBooleanRef is_ascii_capable;
 
 	assert(kbd);
+
+	is_ascii_capable = TISGetInputSourceProperty(kbd, kTISPropertyInputSourceIsASCIICapable);
+	if (!is_ascii_capable || !CFBooleanGetValue(is_ascii_capable)) {
+		CFRelease(kbd);
+		kbd = TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+		if (!kbd) {
+			pthread_mutex_unlock(&keymap_mtx);
+			return;
+		}
+	}
 
 	/*
 	 * Check if the current input source provides keyboard layout data.
