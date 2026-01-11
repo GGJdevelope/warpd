@@ -365,6 +365,7 @@ void osx_input_ungrab_keyboard()
 void osx_input_grab_keyboard()
 {
 	dispatch_sync(dispatch_get_main_queue(), ^{
+		/* Serialized on main queue to avoid concurrent state changes. */
 		/* Intentional: save_and_switch_to_ascii_input is idempotent via ime_switched guard. */
 		save_and_switch_to_ascii_input();
 		if (!grabbed) {
