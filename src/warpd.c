@@ -330,6 +330,7 @@ int main(int argc, char *argv[])
 			daemonize();
 
 		if (!foreground) {
+			/* stdout is reset after daemonize, so line buffering happens here rather than earlier */
 			enable_line_buffered_stdout();
 			printf("Starting warpd " VERSION "\n");
 		}
