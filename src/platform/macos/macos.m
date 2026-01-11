@@ -206,13 +206,14 @@ void platform_run(int (*main)(struct platform *platform), int foreground_mode)
 	NSBundle *mainBundle = [NSBundle mainBundle];
 	NSString *bundleID = [mainBundle bundleIdentifier];
 	
+#ifdef DEBUG
+	/* Only log bundle info in debug builds to avoid system log pollution */
 	if (bundleID && [bundleID isEqualToString:@"com.warpd.warpd"]) {
-		/* Bundle is properly loaded and recognized */
 		NSLog(@"Running as app bundle: %@", bundleID);
 	} else {
-		/* Bundle identifier not recognized - log warning */
 		NSLog(@"Warning: App bundle identifier not properly recognized. Expected 'com.warpd.warpd', got '%@'", bundleID ? bundleID : @"(null)");
 	}
+#endif
 	
 	if (foreground_mode) {
 		[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
