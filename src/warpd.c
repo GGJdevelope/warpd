@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
 				print_usage();
 				return 0;
 			case 'l':
-				platform_run(print_keys_main);
+				platform_run(print_keys_main, 0);
 				return 0;
 			case 'c':
 				config_path = optarg;
@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (mode || oneshot_flag) {
-		platform_run(oneshot_main);
+		platform_run(oneshot_main, foreground);
 	} else {
 		lock();
 
@@ -322,6 +322,6 @@ int main(int argc, char *argv[])
 		setvbuf(stdout, NULL, _IOLBF, 0);
 		printf("Starting warpd " VERSION "\n");
 
-		platform_run(daemon_main);
+		platform_run(daemon_main, foreground);
 	}
 }
