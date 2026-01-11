@@ -311,6 +311,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	if (foreground) {
+		setvbuf(stdout, NULL, _IOLBF, 0);
+		printf("Running warpd in foreground mode\n");
+	}
+
 	if (mode || oneshot_flag) {
 		platform_run(oneshot_main, foreground);
 	} else {
@@ -319,8 +324,10 @@ int main(int argc, char *argv[])
 		if (!foreground)
 			daemonize();
 
-		setvbuf(stdout, NULL, _IOLBF, 0);
-		printf("Starting warpd " VERSION "\n");
+		if (!foreground) {
+			setvbuf(stdout, NULL, _IOLBF, 0);
+			printf("Starting warpd " VERSION "\n");
+		}
 
 		platform_run(daemon_main, foreground);
 	}
