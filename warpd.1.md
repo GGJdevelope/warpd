@@ -10,7 +10,7 @@ warpd [options]
 
 # OPTIONS
 
-	*-f*, *--foreground*: Run warpd in the foreground. Mainly useful for debugging.
+	*-f*, *--foreground*: Run warpd in the foreground. Mainly useful for debugging. On macOS, this flag is required for the application to appear in the accessibility permissions list.
 
 	*-l*, *--list-keys*: Print a list of valid keys which can be used as config values.
 

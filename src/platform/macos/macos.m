@@ -194,12 +194,16 @@ static void *mainloop(void *arg)
 }
 
 
-void platform_run(int (*main)(struct platform *platform))
+void platform_run(int (*main)(struct platform *platform), int foreground_mode)
 {
 	pthread_t thread;
 
 	[NSApplication sharedApplication];
-	[NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
+	if (foreground_mode) {
+		[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+	} else {
+		[NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
+	}
 
 	macos_init_input();
 	macos_init_mouse();

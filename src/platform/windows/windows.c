@@ -441,7 +441,7 @@ static void commit()
 	wn_screen_redraw(scr);
 }
 
-void platform_run(int (*main)(struct platform *platform))
+void platform_run(int (*main)(struct platform *platform), int foreground_mode)
 {
 	SetWindowsHookEx(WH_KEYBOARD_LL, keyboardHook, GetModuleHandle(NULL), 0);
 	wn_init_screen();

@@ -103,5 +103,5 @@ struct platform {
 	void (*show_error_modal)(const char *title, const char *message);
 };
 
-void platform_run(int (*main) (struct platform *platform));
+void platform_run(int (*main) (struct platform *platform), int foreground_mode);
 #endif

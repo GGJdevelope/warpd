@@ -21,7 +21,7 @@ void wayland_init()
 }
 #endif
 
-void platform_run(int (*main) (struct platform *platform))
+void platform_run(int (*main) (struct platform *platform), int foreground_mode)
 {
 	struct platform platform;
 
