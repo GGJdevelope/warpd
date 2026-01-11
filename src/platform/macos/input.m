@@ -443,38 +443,36 @@ static void update_keymap()
 	CFStringRef str;
 	TISInputSourceRef kbd = TISCopyCurrentKeyboardLayoutInputSource();
 	CFBooleanRef is_ascii_capable;
+	int ascii_ok = 0;
+	CFDataRef layout_data = NULL;
 
-	assert(kbd);
+	if (!kbd) {
+		pthread_mutex_unlock(&keymap_mtx);
+		return;
+	}
 
 	is_ascii_capable = TISGetInputSourceProperty(kbd, kTISPropertyInputSourceIsASCIICapable);
-	if (!is_ascii_capable || !CFBooleanGetValue(is_ascii_capable)) {
+	/* Preserve binding names even when the active layout is non-ASCII (e.g., IMEs). */
+	if (is_ascii_capable)
+		ascii_ok = CFBooleanGetValue(is_ascii_capable);
+
+	if (ascii_ok) {
+		layout_data = TISGetInputSourceProperty(kbd, kTISPropertyUnicodeKeyLayoutData);
+	}
+
+	if (!layout_data) {
 		CFRelease(kbd);
 		kbd = TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
 		if (!kbd) {
 			pthread_mutex_unlock(&keymap_mtx);
 			return;
 		}
-	}
-
-	/*
-	 * Check if the current input source provides keyboard layout data.
-	 * Some input methods (e.g., Korean, Chinese, Japanese) don't provide
-	 * kTISPropertyUnicodeKeyLayoutData. In such cases, fall back to the
-	 * ASCII-capable keyboard layout to ensure keycodes can still be mapped.
-	 */
-	CFDataRef layout_data = TISGetInputSourceProperty(kbd, kTISPropertyUnicodeKeyLayoutData);
-	if (!layout_data) {
-		CFRelease(kbd);
-		kbd = TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
-		assert(kbd);
 		layout_data = TISGetInputSourceProperty(kbd, kTISPropertyUnicodeKeyLayoutData);
-	}
-
-	/* If we still don't have layout data, bail out and preserve existing keymap */
-	if (!layout_data) {
-		CFRelease(kbd);
-		pthread_mutex_unlock(&keymap_mtx);
-		return;
+		if (!layout_data) {
+			CFRelease(kbd);
+			pthread_mutex_unlock(&keymap_mtx);
+			return;
+		}
 	}
 
 	for (code = 1; code < 256; code++) {
