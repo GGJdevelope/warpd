@@ -16,7 +16,10 @@ all: $(OBJECTS)
 	cp files/Info.plist bin/warpd.app/Contents/Info.plist
 	chmod +x bin/warpd.app/Contents/MacOS/warpd
 	./codesign/sign.sh bin/warpd.app
-	ln -sf warpd.app/Contents/MacOS/warpd bin/warpd
+	# Create a wrapper script for local testing that mimics installed behavior
+	echo '#!/bin/sh' > bin/warpd
+	echo 'exec "$$(dirname "$$0")/warpd.app/Contents/MacOS/warpd" "$$@"' >> bin/warpd
+	chmod +x bin/warpd
 rel: clean
 	$(CC) -o bin/warpd-arm $(CFILES) $(OBJCFILES) -target arm64-apple-macos $(CFLAGS) $(RELFLAGS)
 	$(CC) -o bin/warpd-x86  $(CFILES) $(OBJCFILES) -target x86_64-apple-macos $(CFLAGS) $(RELFLAGS)
@@ -28,7 +31,10 @@ rel: clean
 	cp files/Info.plist bin/warpd.app/Contents/Info.plist
 	chmod +x bin/warpd.app/Contents/MacOS/warpd
 	./codesign/sign.sh bin/warpd.app
-	ln -sf warpd.app/Contents/MacOS/warpd bin/warpd
+	# Create a wrapper script for local testing that mimics installed behavior
+	echo '#!/bin/sh' > bin/warpd
+	echo 'exec "$$(dirname "$$0")/warpd.app/Contents/MacOS/warpd" "$$@"' >> bin/warpd
+	chmod +x bin/warpd
 	-rm -rf tmp dist
 	mkdir tmp dist
 	DESTDIR=tmp make install
@@ -41,7 +47,7 @@ install:
 		$(DESTDIR)/Library/LaunchAgents && \
 	install -m644 files/warpd.1.gz $(DESTDIR)/usr/local/share/man/man1 && \
 	cp -R bin/warpd.app $(DESTDIR)/Applications/ && \
-	ln -sf /Applications/warpd.app/Contents/MacOS/warpd $(DESTDIR)/usr/local/bin/warpd && \
+	install -m755 files/warpd-wrapper.sh $(DESTDIR)/usr/local/bin/warpd && \
 	install -m644 files/com.warpd.warpd.plist $(DESTDIR)/Library/LaunchAgents
 uninstall:
 	rm -f $(DESTDIR)/usr/local/share/man/man1/warpd.1.gz \
@@ -50,4 +56,4 @@ uninstall:
 	rm -rf $(DESTDIR)/Applications/warpd.app
 clean:
 	-rm $(OBJECTS)
-	-rm -rf bin/warpd.app bin/warpd-bin
+	-rm -rf bin/warpd.app bin/warpd-bin bin/warpd
