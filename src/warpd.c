@@ -10,6 +10,11 @@ struct platform *platform = NULL;
 
 static const char *config_path;
 
+static void enable_line_buffered_stdout()
+{
+	setvbuf(stdout, NULL, _IOLBF, 0);
+}
+
 uint64_t get_time_us()
 {
 	struct timespec ts;
@@ -312,7 +317,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (foreground) {
-		setvbuf(stdout, NULL, _IOLBF, 0);
+		enable_line_buffered_stdout();
 		printf("Running warpd in foreground mode\n");
 	}
 
@@ -325,7 +330,7 @@ int main(int argc, char *argv[])
 			daemonize();
 
 		if (!foreground) {
-			setvbuf(stdout, NULL, _IOLBF, 0);
+			enable_line_buffered_stdout();
 			printf("Starting warpd " VERSION "\n");
 		}
 
