@@ -89,7 +89,7 @@ static struct {
 	{ "grid_color", "#38bdf8", "The color of the grid.", OPT_STRING },
 	{ "grid_border_color", "#0ea5e9", "The color of the grid border.", OPT_STRING },
 
-	{ "hint_bgcolor", "#2563eb", "The background hint color.", OPT_STRING },
+	{ "hint_bgcolor", "#2563eb70", "The background hint color.", OPT_STRING },
 	{ "hint_fgcolor", "#f8fafc", "The foreground hint color.", OPT_STRING },
 	{ "hint_chars", "abcdefghijklmnopqrstuvwxyz", "The character set from which hints are generated. The total number of hints is the square of the size of this string. It may be desirable to increase this for larger screens or trim it to increase gaps between hints.", OPT_STRING },
 	{ "hint_font", "Arial", "The font name used by hints. Note: This is platform specific, in X it corresponds to a valid xft font name, on macos it corresponds to a postscript name.", OPT_STRING },
