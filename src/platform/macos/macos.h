@@ -124,5 +124,6 @@ void osx_copy_selection();
 void osx_monitor_file(const char *_path);
 void osx_input_interrupt();
 void osx_commit();
+void osx_show_error_modal(const char *title, const char *message);
 
 #endif

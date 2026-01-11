@@ -472,6 +472,13 @@ void platform_run(int (*main)(struct platform *platform))
 	platform.input_lookup_code = input_lookup_code;
 	platform.input_lookup_name = input_lookup_name;
 	platform.monitor_file = wn_monitor_file;
+	platform.show_error_modal = wn_show_error_modal;
 
 	exit(main(&platform));
+}
+
+void wn_show_error_modal(const char *title, const char *message)
+{
+	/* Use Windows MessageBox API for error display */
+	MessageBoxA(NULL, message, title, MB_OK | MB_ICONERROR | MB_TOPMOST);
 }

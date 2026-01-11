@@ -499,9 +499,11 @@ void macos_init_input()
 
 
 	if (!tap) {
-		fprintf(stderr,
-			"Failed to create event tap, make sure warpd is "
-			"whitelisted as an accessibility feature.\n");
+		/* Show error modal before exiting */
+		osx_show_error_modal("Accessibility Permission Required",
+			"Failed to create event tap.\n\n"
+			"Please make sure warpd is whitelisted as an\n"
+			"accessibility feature in System Settings.");
 		exit(-1);
 	}
 
