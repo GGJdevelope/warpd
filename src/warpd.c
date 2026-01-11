@@ -118,7 +118,7 @@ static void print_usage()
 {
 	const char *usage =
 		"warpd: [options]\n\n"
-		"  -f, --foreground            Run warpd in the foreground (useful for debugging).\n"
+		"  -f, --foreground            Run warpd in the foreground (useful for debugging). On macOS, required to appear in accessibility list.\n"
 		"  -h, --help                  Print this help message.\n"
 		"  -v, --version               Print the version and exit.\n"
 		"  -c, --config <config file>  Use the supplied config file.\n"
