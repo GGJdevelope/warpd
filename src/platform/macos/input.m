@@ -364,13 +364,17 @@ void osx_input_ungrab_keyboard()
 
 void osx_input_grab_keyboard()
 {
-	if (grabbed)
-		return;
-
 	dispatch_sync(dispatch_get_main_queue(), ^{
-		save_and_switch_to_ascii_input();
-		grabbed = 1;
-		grabbed_time = get_time_ms();
+		/* Serialized on main queue to avoid concurrent state changes. */
+		/* Intentional: save_and_switch_to_ascii_input is idempotent via the
+		 * ime_switched guard inside that helper. The extra guard here avoids
+		 * repeated CoreFoundation calls when we're already in ASCII mode. */
+		if (!ime_switched)
+			save_and_switch_to_ascii_input();
+		if (!grabbed) {
+			grabbed = 1;
+			grabbed_time = get_time_ms();
+		}
 	});
 }
 
