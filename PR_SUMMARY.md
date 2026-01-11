@@ -56,7 +56,7 @@ warpd.app/
 - Critical for making `warpd -f` and `warpd` work correctly from command line
 
 ### 3. files/com.warpd.warpd.plist
-- Updated `ProgramArguments` to point to `/Applications/warpd.app/Contents/MacOS/warpd` instead of `/usr/local/bin/warpd`
+- Updated `ProgramArguments` to point to `/usr/local/bin/warpd` (the wrapper script) which then executes the binary from the app bundle
 
 ### 4. codesign/sign.sh
 - Made script accept binary path as argument

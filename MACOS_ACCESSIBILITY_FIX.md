@@ -49,7 +49,7 @@ warpd.app/
    - Passes all command-line arguments through to the binary
 
 3. **Updated `files/com.warpd.warpd.plist`**:
-   - LaunchAgent now points to `/Applications/warpd.app/Contents/MacOS/warpd`
+   - LaunchAgent now points to `/usr/local/bin/warpd` (the wrapper script)
 
 4. **Updated `codesign/sign.sh`**:
    - Made more robust to handle signing errors gracefully
