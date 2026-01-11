@@ -20,6 +20,10 @@ static CFMachPortRef tap;
 uint8_t active_mods = 0;
 pthread_mutex_t keymap_mtx = PTHREAD_MUTEX_INITIALIZER;
 
+/* IME state management */
+static TISInputSourceRef saved_input_source = NULL;
+static int ime_switched = 0;
+
 static struct {
 	char name[32];
 	char shifted_name[32];
@@ -47,6 +51,78 @@ static long get_time_ms()
 static void write_message(int fd, void *msg, ssize_t sz)
 {
 	assert(write(fd, msg, sz) == sz);
+}
+
+/*
+ * Save the current input source and switch to ASCII-capable input source.
+ * This prevents IME freezing when warpd grabs the keyboard.
+ * 
+ * The issue: When Korean IME (or other non-ASCII input methods) is active,
+ * grabbing the keyboard can leave the IME in an intermediate composition state.
+ * Since warpd blocks events during grab, the IME never receives the proper
+ * termination events, causing keyboard input to freeze.
+ * 
+ * The solution: Temporarily switch to an ASCII-capable input source before
+ * grabbing, which cleanly terminates any active IME composition.
+ * 
+ * NOTE: This function must be called from the main queue (via dispatch_sync).
+ */
+static void save_and_switch_to_ascii_input()
+{
+	if (ime_switched)
+		return;
+
+	/* Get the current input source */
+	TISInputSourceRef current = TISCopyCurrentKeyboardInputSource();
+	if (!current)
+		return;
+
+	/* Check if current source is ASCII-capable */
+	CFBooleanRef is_ascii_capable = TISGetInputSourceProperty(current, kTISPropertyInputSourceIsASCIICapable);
+	
+	/* Property check: ensure we got a valid boolean property */
+	if (is_ascii_capable && CFBooleanGetValue(is_ascii_capable)) {
+		/* Already ASCII-capable, no need to switch */
+		CFRelease(current);
+		return;
+	}
+	
+	/* If property is NULL, assume non-ASCII and proceed with switch */
+
+	/* Save current input source for later restoration */
+	/* Note: Ownership of 'current' is transferred to 'saved_input_source' */
+	saved_input_source = current;
+	
+	/* Switch to ASCII-capable input source */
+	TISInputSourceRef ascii_source = TISCopyCurrentASCIICapableKeyboardInputSource();
+	if (ascii_source) {
+		TISSelectInputSource(ascii_source);
+		CFRelease(ascii_source);
+		ime_switched = 1;
+	} else {
+		/* Failed to get ASCII source, release saved source */
+		CFRelease(saved_input_source);
+		saved_input_source = NULL;
+	}
+}
+
+/*
+ * Restore the previously saved input source.
+ * 
+ * NOTE: This function must be called from the main queue (via dispatch_sync).
+ */
+static void restore_input_source()
+{
+	if (!ime_switched)
+		return;
+
+	if (saved_input_source) {
+		TISSelectInputSource(saved_input_source);
+		CFRelease(saved_input_source);
+		saved_input_source = NULL;
+	}
+	
+	ime_switched = 0;
 }
 
 /* Returns -1 if the timeout expires before a message is available. */
@@ -282,6 +358,7 @@ void osx_input_ungrab_keyboard()
 {
 	dispatch_sync(dispatch_get_main_queue(), ^{
 		grabbed = 0;
+		restore_input_source();
 	});
 }
 
@@ -291,6 +368,7 @@ void osx_input_grab_keyboard()
 		return;
 
 	dispatch_sync(dispatch_get_main_queue(), ^{
+		save_and_switch_to_ascii_input();
 		grabbed = 1;
 		grabbed_time = get_time_ms();
 	});
