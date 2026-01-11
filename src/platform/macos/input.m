@@ -368,7 +368,8 @@ void osx_input_grab_keyboard()
 		/* Serialized on main queue to avoid concurrent state changes. */
 		/* Intentional: save_and_switch_to_ascii_input is idempotent via the
 		 * ime_switched guard inside that helper. */
-		save_and_switch_to_ascii_input();
+		if (!ime_switched)
+			save_and_switch_to_ascii_input();
 		if (!grabbed) {
 			grabbed = 1;
 			grabbed_time = get_time_ms();
