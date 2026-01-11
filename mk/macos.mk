@@ -15,7 +15,7 @@ all: $(OBJECTS)
 	cp bin/warpd-bin bin/warpd.app/Contents/MacOS/warpd
 	cp files/Info.plist bin/warpd.app/Contents/Info.plist
 	chmod +x bin/warpd.app/Contents/MacOS/warpd
-	./codesign/sign.sh bin/warpd.app/Contents/MacOS/warpd
+	./codesign/sign.sh bin/warpd.app
 	ln -sf warpd.app/Contents/MacOS/warpd bin/warpd
 rel: clean
 	$(CC) -o bin/warpd-arm $(CFILES) $(OBJCFILES) -target arm64-apple-macos $(CFLAGS) $(RELFLAGS)
@@ -27,7 +27,7 @@ rel: clean
 	cp bin/warpd-bin bin/warpd.app/Contents/MacOS/warpd
 	cp files/Info.plist bin/warpd.app/Contents/Info.plist
 	chmod +x bin/warpd.app/Contents/MacOS/warpd
-	./codesign/sign.sh bin/warpd.app/Contents/MacOS/warpd
+	./codesign/sign.sh bin/warpd.app
 	ln -sf warpd.app/Contents/MacOS/warpd bin/warpd
 	-rm -rf tmp dist
 	mkdir tmp dist

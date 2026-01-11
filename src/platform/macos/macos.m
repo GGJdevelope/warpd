@@ -199,8 +199,27 @@ void platform_run(int (*main)(struct platform *platform), int foreground_mode)
 	pthread_t thread;
 
 	[NSApplication sharedApplication];
+	
+	/* Ensure the app is properly associated with its bundle for TCC (Transparency, Consent, and Control).
+	   This is critical for the app to appear in System Settings → Privacy & Security → Accessibility.
+	   When running via symlink, we need to explicitly verify the bundle is recognized. */
+	NSBundle *mainBundle = [NSBundle mainBundle];
+	NSString *bundleID = [mainBundle bundleIdentifier];
+	
+#ifdef DEBUG
+	/* Only log bundle info in debug builds to avoid system log pollution */
+	if (bundleID && [bundleID isEqualToString:@"com.warpd.warpd"]) {
+		NSLog(@"Running as app bundle: %@", bundleID);
+	} else {
+		NSLog(@"Warning: App bundle identifier not properly recognized. Expected 'com.warpd.warpd', got '%@'", bundleID ? bundleID : @"(null)");
+	}
+#endif
+	
 	if (foreground_mode) {
 		[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+		/* Activate the app to make it visible to the system and TCC.
+		   This helps ensure the app appears in System Settings → Privacy & Security lists. */
+		[NSApp activateIgnoringOtherApps:YES];
 	} else {
 		[NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
 	}
