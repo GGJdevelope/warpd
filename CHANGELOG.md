@@ -1,3 +1,6 @@
+# v1.3.6 (unreleased)
+- macos: Fix keyboard freeze when using Korean IME (or other non-ASCII input methods)
+
 # v1.3.5
 - macos: Various input bugfixes
 - macos: Introduce launchd service (the user should no longer run warpd explicitly)
