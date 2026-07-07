@@ -14,3 +14,7 @@ dist/
 *.exe
 tests/cursor_style_test
 tests/cursor_style_test.dSYM/
+tests/input_interrupt_test
+tests/input_interrupt_test.dSYM/
+tests/mode_interrupt_test
+tests/mode_interrupt_test.dSYM/

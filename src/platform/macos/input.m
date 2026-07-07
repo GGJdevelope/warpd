@@ -16,6 +16,8 @@ static size_t grabbed_keys_sz = 0;
 static uint8_t passthrough_keys[256] = {0};
 
 static CFMachPortRef tap;
+static CFRunLoopSourceRef tap_run_loop_source;
+static int input_ready = 0;
 
 uint8_t active_mods = 0;
 pthread_mutex_t keymap_mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -28,6 +30,10 @@ static struct {
 	char name[32];
 	char shifted_name[32];
 } keymap[256] = { 0 };
+
+static CGEventRef eventTapCallback(CGEventTapProxy proxy, CGEventType type,
+				   CGEventRef event, void *context);
+static void update_keymap();
 
 struct mod {
 	uint8_t mask;
@@ -51,6 +57,14 @@ static long get_time_ms()
 static void write_message(int fd, void *msg, ssize_t sz)
 {
 	assert(write(fd, msg, sz) == sz);
+}
+
+static void run_on_main_sync(void (^block)(void))
+{
+	if ([NSThread isMainThread])
+		block();
+	else
+		dispatch_sync(dispatch_get_main_queue(), block);
 }
 
 /*
@@ -147,8 +161,91 @@ static int read_message(int fd, void *msg, ssize_t sz, int timeout)
 
 void osx_input_interrupt()
 {
-	struct input_event ev = {0};
+	if (!input_ready)
+		return;
+
+	struct input_event ev = { .pressed = 1 };
 	write_message(input_fds[1], &ev, sizeof ev);
+}
+
+static CFMachPortRef create_event_tap()
+{
+	return CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0,
+				kCGEventMaskForAllEvents, eventTapCallback, NULL);
+}
+
+static void clear_grab_state()
+{
+	grabbed = 0;
+	grabbed_keys = NULL;
+	grabbed_keys_sz = 0;
+	active_mods = 0;
+	memset(passthrough_keys, 0, sizeof passthrough_keys);
+	restore_input_source();
+}
+
+static void remove_event_tap()
+{
+	if (tap_run_loop_source) {
+		CFRunLoopRemoveSource(CFRunLoopGetCurrent(), tap_run_loop_source,
+				      kCFRunLoopCommonModes);
+		CFRelease(tap_run_loop_source);
+		tap_run_loop_source = NULL;
+	}
+
+	if (tap) {
+		CFMachPortInvalidate(tap);
+		CFRelease(tap);
+		tap = NULL;
+	}
+}
+
+static int install_event_tap(CFMachPortRef new_tap)
+{
+	if (!new_tap)
+		return -1;
+
+	tap = new_tap;
+	tap_run_loop_source =
+	    CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0);
+	CFRunLoopAddSource(CFRunLoopGetCurrent(), tap_run_loop_source,
+			   kCFRunLoopCommonModes);
+	CGEventTapEnable(tap, true);
+
+	return 0;
+}
+
+void osx_input_suspend()
+{
+	run_on_main_sync(^{
+		clear_grab_state();
+	});
+
+	osx_input_interrupt();
+}
+
+void osx_input_recover()
+{
+	run_on_main_sync(^{
+		clear_grab_state();
+
+		if (tap && CFMachPortIsValid(tap)) {
+			CGEventTapEnable(tap, true);
+		} else {
+			remove_event_tap();
+			if (install_event_tap(create_event_tap()) < 0) {
+				osx_show_error_modal("Accessibility Permission Required",
+					"Failed to create event tap.\n\n"
+					"Please make sure warpd is whitelisted as an\n"
+					"accessibility feature in System Settings.");
+				exit(-1);
+			}
+		}
+
+		update_keymap();
+	});
+
+	osx_input_interrupt();
 }
 
 static CGEventRef eventTapCallback(CGEventTapProxy proxy, CGEventType type,
@@ -164,8 +261,9 @@ static CGEventRef eventTapCallback(CGEventTapProxy proxy, CGEventType type,
 	static uint8_t keymods[256] = {0}; /* Mods active at key down time. */
 	static long pressed_timestamps[256];
 
-	/* macOS will timeout the event tap, so we have to re-enable it :/ */
-	if (type == kCGEventTapDisabledByTimeout) {
+	/* macOS may disable the event tap, so we have to re-enable it :/ */
+	if (type == kCGEventTapDisabledByTimeout ||
+	    type == kCGEventTapDisabledByUserInput) {
 		CGEventTapEnable(tap, true);
 		return event;
 	}
@@ -356,7 +454,7 @@ void send_key(uint8_t code, int pressed)
 
 void osx_input_ungrab_keyboard()
 {
-	dispatch_sync(dispatch_get_main_queue(), ^{
+	run_on_main_sync(^{
 		grabbed = 0;
 		restore_input_source();
 	});
@@ -364,7 +462,7 @@ void osx_input_ungrab_keyboard()
 
 void osx_input_grab_keyboard()
 {
-	dispatch_sync(dispatch_get_main_queue(), ^{
+	run_on_main_sync(^{
 		/* Serialized on main queue to avoid concurrent state changes. */
 		/* Intentional: save_and_switch_to_ascii_input is idempotent via the
 		 * ime_switched guard inside that helper. The extra guard here avoids
@@ -385,7 +483,7 @@ struct input_event *osx_input_next_event(int timeout)
 	if (read_message(input_fds[0], &ev, sizeof ev, timeout) < 0)
 		return 0;
 
-	if (ev.code == 0 && ev.mods == 0)
+	if (ev.code == 0 && ev.mods == 0 && ev.pressed == 0)
 		return NULL;
 
 	return &ev;
@@ -400,8 +498,11 @@ struct input_event *osx_input_wait(struct input_event *keys, size_t sz)
 		size_t i;
 		struct input_event *ev = osx_input_next_event(0);
 
-		if (ev == NULL)
+		if (ev == NULL || (ev->code == 0 && ev->mods == 0)) {
+			grabbed_keys = NULL;
+			grabbed_keys_sz = 0;
 			return NULL;
+		}
 
 		for (i = 0; i < sz; i++)
 			if (ev->pressed && keys[i].code == ev->code &&
@@ -578,14 +679,12 @@ void macos_init_input()
 		printf("Waiting for accessibility permissions\n");
 		tap = nil;
 		while (!tap) {
-			tap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0,
-					     kCGEventMaskForAllEvents, eventTapCallback, NULL);
+			tap = create_event_tap();
 			usleep(100000);
 		}
 		printf("Accessibility permission granted, proceeding\n");
 	} else {
-		tap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0,
-				     kCGEventMaskForAllEvents, eventTapCallback, NULL);
+		tap = create_event_tap();
 	}
 
 
@@ -598,14 +697,7 @@ void macos_init_input()
 		exit(-1);
 	}
 
-	CFRunLoopSourceRef runLoopSource =
-	    CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0);
-
-	CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource,
-			   kCFRunLoopCommonModes);
-
-
-	CGEventTapEnable(tap, true);
+	install_event_tap(tap);
 
 	CFNotificationCenterAddObserver(
 	    CFNotificationCenterGetLocalCenter(), NULL, update_keymap,
@@ -618,4 +710,5 @@ void macos_init_input()
 		perror("pipe");
 		exit(-1);
 	}
+	input_ready = 1;
 }

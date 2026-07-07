@@ -119,6 +119,9 @@ On first run, you will be prompted to grant accessibility permissions. If you ar
 *Note 3:* Some programs (e.g iTerm) have a 'secure input mode' that may need to be
 disabled in order for warpd to work properly.
 
+*Note 4:* On macOS, locking or sleeping the machine while a warpd mode is active
+cancels that mode and restores keyboard input after unlock or wake.
+
 The service can be disabled with
 
 ```

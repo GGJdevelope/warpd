@@ -86,6 +86,11 @@ const char *input_event_tostr(struct input_event *ev)
 	return s;
 }
 
+int input_event_is_interrupt(struct input_event *ev)
+{
+	return ev && ev->code == 0 && ev->mods == 0;
+}
+
 /*
  * Returns:
  * 0 on no match

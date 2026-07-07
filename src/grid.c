@@ -129,6 +129,9 @@ struct input_event *grid_mode()
 		ev = platform->input_next_event(10);
 		platform->mouse_get_position(NULL, &mx, &my);
 
+		if (input_event_is_interrupt(ev))
+			goto exit;
+
 		if (mouse_process_key(ev, "grid_up", "grid_down", "grid_left", "grid_right")) {
 			redraw(mx, my, 0);
 			continue;

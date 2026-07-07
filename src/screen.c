@@ -1,11 +1,12 @@
 #include "warpd.h"
 
-void screen_selection_mode()
+int screen_selection_mode(void)
 {
 	size_t i;
 	size_t n;
 	screen_t screens[MAX_SCREENS];
 	struct input_event *ev;
+	int interrupted = 0;
 	const char *screen_chars = config_get("screen_chars");
 
 	platform->screen_list(screens, &n);
@@ -32,18 +33,27 @@ void screen_selection_mode()
 	platform->input_grab_keyboard();
 	while (1) {
 		ev = platform->input_next_event(0);
+		if (input_event_is_interrupt(ev)) {
+			ev = NULL;
+			interrupted = 1;
+			break;
+		}
+		if (!ev)
+			continue;
 		if (ev->pressed)
 			break;
 	}
 	platform->input_ungrab_keyboard();
 
-	for (i = 0; i < n; i++) {
-		const char *key = input_event_tostr(ev);
+	if (ev) {
+		for (i = 0; i < n; i++) {
+			const char *key = input_event_tostr(ev);
 
-		if (key[0] == screen_chars[i] && key[1] == 0) {
-			int w, h;
-			platform->screen_get_dimensions(screens[i], &w, &h);
-			platform->mouse_move(screens[i], w/2, h/2);
+			if (key[0] == screen_chars[i] && key[1] == 0) {
+				int w, h;
+				platform->screen_get_dimensions(screens[i], &w, &h);
+				platform->mouse_move(screens[i], w/2, h/2);
+			}
 		}
 	}
 
@@ -51,4 +61,5 @@ void screen_selection_mode()
 		platform->screen_clear(screens[i]);
 
 	platform->commit();
+	return interrupted ? -1 : 0;
 }

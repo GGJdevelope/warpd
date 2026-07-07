@@ -92,7 +92,7 @@ extern char last_selected_hint[32];
 int hintspec_mode();
 int history_hint_mode();
 int full_hint_mode(int second_pass);
-void screen_selection_mode();
+int screen_selection_mode(void);
 struct input_event *grid_mode();
 struct input_event *normal_mode(struct input_event *start_ev, int oneshot);
 
@@ -103,6 +103,7 @@ void init_grid_mode();
 void config_input_whitelist(const char *names[], size_t n);
 
 const char *input_event_tostr(struct input_event *ev);
+int input_event_is_interrupt(struct input_event *ev);
 int input_eq(struct input_event *ev, const char *str);
 int input_parse_string(struct input_event *ev, const char *s);
 int config_input_match(struct input_event *ev, const char *str);

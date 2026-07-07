@@ -119,6 +119,11 @@ struct input_event *normal_mode(struct input_event *start_ev, int oneshot)
 
 		platform->mouse_get_position(&scr, &mx, &my);
 
+		if (input_event_is_interrupt(ev)) {
+			ev = NULL;
+			goto exit;
+		}
+
 		if (!system_cursor && on_time) {
 			if (show_cursor && (time - last_blink_update) >= on_time) {
 				show_cursor = 0;
@@ -251,6 +256,8 @@ struct input_event *normal_mode(struct input_event *start_ev, int oneshot)
 	}
 
 exit:
+	if (dragging)
+		platform->mouse_up(config_get_int("drag_button"));
 	platform->mouse_show();
 	platform->screen_clear(scr);
 

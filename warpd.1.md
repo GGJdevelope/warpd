@@ -335,6 +335,8 @@ A list of known limitations follow:
 - Cursor hiding relies on a hack that some programs ignore (e.g iTerm).
 - Some programs (e.g iTerm) have a 'secure input mode' (which can usually be
 disabled) that causes interference.
+- Locking or sleeping the machine while a warpd mode is active cancels that
+  mode so keyboard input can recover after unlock or wake.
 
 ## Wayland
 

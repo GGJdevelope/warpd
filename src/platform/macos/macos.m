@@ -193,6 +193,37 @@ static void *mainloop(void *arg)
 	exit(0);
 }
 
+static void register_workspace_lifecycle_notifications()
+{
+	NSNotificationCenter *nc = [[NSWorkspace sharedWorkspace] notificationCenter];
+	NSOperationQueue *queue = [NSOperationQueue mainQueue];
+
+	[nc addObserverForName:NSWorkspaceWillSleepNotification
+			object:nil
+			 queue:queue
+		    usingBlock:^(NSNotification *note) {
+			    osx_input_suspend();
+		    }];
+	[nc addObserverForName:NSWorkspaceSessionDidResignActiveNotification
+			object:nil
+			 queue:queue
+		    usingBlock:^(NSNotification *note) {
+			    osx_input_suspend();
+		    }];
+	[nc addObserverForName:NSWorkspaceDidWakeNotification
+			object:nil
+			 queue:queue
+		    usingBlock:^(NSNotification *note) {
+			    osx_input_recover();
+		    }];
+	[nc addObserverForName:NSWorkspaceSessionDidBecomeActiveNotification
+			object:nil
+			 queue:queue
+		    usingBlock:^(NSNotification *note) {
+			    osx_input_recover();
+		    }];
+}
+
 
 void platform_run(int (*main)(struct platform *platform), int foreground_mode)
 {
@@ -227,6 +258,7 @@ void platform_run(int (*main)(struct platform *platform), int foreground_mode)
 	macos_init_input();
 	macos_init_mouse();
 	macos_init_screen();
+	register_workspace_lifecycle_notifications();
 
 	pthread_create(&thread, NULL, mainloop, (void *)main);
 
@@ -249,4 +281,3 @@ void osx_show_error_modal(const char *title, const char *message)
 	/* Give the modal time to display */
 	sleep(1);
 }
-

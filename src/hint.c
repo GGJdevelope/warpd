@@ -122,6 +122,14 @@ static int hint_selection(screen_t scr, struct hint *_hints, size_t _nr_hints)
 
 		ev = platform->input_next_event(0);
 
+		if (input_event_is_interrupt(ev)) {
+			rc = -1;
+			break;
+		}
+
+		if (!ev)
+			continue;
+
 		if (!ev->pressed)
 			continue;
 

@@ -35,11 +35,19 @@ endif
 
 .PHONY: test
 
-test: tests/cursor_style_test
+test: tests/cursor_style_test tests/input_interrupt_test tests/mode_interrupt_test
 	./tests/cursor_style_test
+	./tests/input_interrupt_test
+	./tests/mode_interrupt_test
 
 tests/cursor_style_test: tests/cursor_style_test.c src/cursor.c src/config.c src/warpd.h src/platform.h
 	$(CC) -o tests/cursor_style_test tests/cursor_style_test.c src/cursor.c src/config.c $(CFLAGS)
+
+tests/input_interrupt_test: tests/input_interrupt_test.c src/input.c src/warpd.h src/platform.h
+	$(CC) -o tests/input_interrupt_test tests/input_interrupt_test.c src/input.c $(CFLAGS)
+
+tests/mode_interrupt_test: tests/mode_interrupt_test.c src/normal.c src/warpd.h src/platform.h
+	$(CC) -o tests/mode_interrupt_test tests/mode_interrupt_test.c src/normal.c $(CFLAGS)
 
 man:
 	scdoc < warpd.1.md | gzip > files/warpd.1.gz

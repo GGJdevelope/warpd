@@ -53,12 +53,15 @@ int mode_loop(int initial_mode, int oneshot, int record_history)
 			break;
 		case MODE_GRID:
 			ev = grid_mode();
+			if (input_event_is_interrupt(ev))
+				goto exit;
 			if (config_input_match(ev, "grid_exit"))
 				ev = NULL;
 			mode = MODE_NORMAL;
 			break;
 		case MODE_SCREEN_SELECTION:
-			screen_selection_mode();
+			if (screen_selection_mode() < 0)
+				goto exit;
 			mode = MODE_NORMAL;
 			ev = NULL;
 			break;
@@ -86,4 +89,3 @@ int mode_loop(int initial_mode, int oneshot, int record_history)
 exit:
 	return rc;
 }
-

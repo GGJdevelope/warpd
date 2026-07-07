@@ -3,8 +3,15 @@
 export KEYCHAIN_NAME=warpd-temp-keychain
 export KEYCHAIN_PASSWORD=
 
-# Allow passing binary or bundle path as argument
-TARGET_PATH="${1:-../bin/warpd-bin}"
+# Allow passing binary or bundle path as argument.
+if [ "$#" -gt 0 ]; then
+  case "$1" in
+    /*) TARGET_PATH="$1" ;;
+    *) TARGET_PATH="$(pwd)/$1" ;;
+  esac
+else
+  TARGET_PATH="../bin/warpd-bin"
+fi
 
 cd "$(dirname "$0")"
 
