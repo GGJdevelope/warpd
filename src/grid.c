@@ -42,6 +42,10 @@ static void redraw(int mx, int my, int force)
 	const int gbsz = config_get_int("grid_border_size");
 	const char *gbcol = config_get("grid_border_color");
 	const char *gcol = config_get("grid_color");
+	const char *curcol = config_get("cursor_color");
+	const char *curborder = config_get("cursor_border_color");
+	const enum cursor_style curstyle =
+		cursor_style_from_name(config_get("cursor_style"));
 
 	const int gh = grid_height;
 	const int gw = grid_width;
@@ -69,10 +73,8 @@ static void redraw(int mx, int my, int force)
 		  x+gbsz, y+gbsz,
 		  gw-gbsz*2, gh-gbsz*2);
 
-	platform->screen_draw_box(scr,
-			x+gw/2-cursz/2, y+gh/2-cursz/2,
-			cursz, cursz,
-			config_get("cursor_color"));
+	cursor_draw(scr, x + gw / 2, y + gh / 2, cursz, curcol,
+			curborder, curstyle, 1);
 
 	platform->commit();
 }

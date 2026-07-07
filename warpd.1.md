@@ -166,6 +166,12 @@ The program can be modified by placing configuration options in
 *~/.config/warpd/config*, a complete list of which can be obtained
 with _--list-options_.
 
+The internal cursor can be styled with _cursor_style_. The default,
+_crosshair_, draws a thin target marker with a white border and black
+body using _cursor_border_color_ and _cursor_color_. Set it to _square_
+to use the traditional filled cursor shape. This does not affect
+_normal_system_cursor_, which still uses the system cursor when enabled.
+
 Each option must be specified on its own line and have the format:
 
 <option>: <value>

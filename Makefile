@@ -1,6 +1,7 @@
 VERSION=1.3.5
 PREFIX?=/usr/local
 COMMITSTR=$(shell commit=$$(git rev-parse --short HEAD 2> /dev/null) && echo " (built from: $$commit)")
+.DEFAULT_GOAL := all
 
 ifeq ($(shell uname -s), Darwin)
 	PLATFORM?=macos
@@ -31,6 +32,14 @@ else ifeq ($(PLATFORM), windows)
 else
 	include mk/linux.mk
 endif
+
+.PHONY: test
+
+test: tests/cursor_style_test
+	./tests/cursor_style_test
+
+tests/cursor_style_test: tests/cursor_style_test.c src/cursor.c src/config.c src/warpd.h src/platform.h
+	$(CC) -o tests/cursor_style_test tests/cursor_style_test.c src/cursor.c src/config.c $(CFLAGS)
 
 man:
 	scdoc < warpd.1.md | gzip > files/warpd.1.gz

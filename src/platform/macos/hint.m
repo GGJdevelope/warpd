@@ -4,6 +4,7 @@ static float border_radius;
 
 static NSColor *bgColor;
 static NSColor *fgColor;
+static NSColor *outlineColor;
 const char *font;
 
 
@@ -17,6 +18,22 @@ static void draw_hook(void *arg, NSView *view)
 		macos_draw_box(scr, bgColor,
 				h->x, h->y, h->w, h->h, border_radius);
 
+		macos_draw_text(scr, outlineColor, font,
+				h->x - 1, h->y - 1, h->w, h->h, h->label);
+		macos_draw_text(scr, outlineColor, font,
+				h->x, h->y - 1, h->w, h->h, h->label);
+		macos_draw_text(scr, outlineColor, font,
+				h->x + 1, h->y - 1, h->w, h->h, h->label);
+		macos_draw_text(scr, outlineColor, font,
+				h->x - 1, h->y, h->w, h->h, h->label);
+		macos_draw_text(scr, outlineColor, font,
+				h->x + 1, h->y, h->w, h->h, h->label);
+		macos_draw_text(scr, outlineColor, font,
+				h->x - 1, h->y + 1, h->w, h->h, h->label);
+		macos_draw_text(scr, outlineColor, font,
+				h->x, h->y + 1, h->w, h->h, h->label);
+		macos_draw_text(scr, outlineColor, font,
+				h->x + 1, h->y + 1, h->w, h->h, h->label);
 		macos_draw_text(scr, fgColor, font,
 				h->x, h->y, h->w, h->h, h->label);
 	}
@@ -35,8 +52,8 @@ void osx_init_hint(const char *bg, const char *fg, int _border_radius,
 {
 	bgColor = nscolor_from_hex(bg);
 	fgColor = nscolor_from_hex(fg);
+	outlineColor = NSColor.blackColor;
 
 	border_radius = (float)_border_radius;
 	font = font_family;
 }
-

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="128" y1="96" x2="896" y2="928" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2f3743"/>
+      <stop offset="0.52" stop-color="#0b0d12"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+    <linearGradient id="gate" x1="276" y1="248" x2="748" y2="776" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.32" stop-color="#89f7ff"/>
+      <stop offset="0.68" stop-color="#7567ff"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <radialGradient id="core" cx="512" cy="512" r="308" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.96"/>
+      <stop offset="0.28" stop-color="#90f7ff" stop-opacity="0.64"/>
+      <stop offset="0.58" stop-color="#5346ff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft-glow" x="-45%" y="-45%" width="190%" height="190%">
+      <feGaussianBlur stdDeviation="26" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <rect x="48" y="48" width="928" height="928" rx="188" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="28"/>
+  <circle cx="512" cy="512" r="346" fill="url(#core)" filter="url(#soft-glow)"/>
+  <ellipse cx="512" cy="512" rx="252" ry="336" fill="none" stroke="#05060a" stroke-width="96"/>
+  <ellipse cx="512" cy="512" rx="252" ry="336" fill="none" stroke="url(#gate)" stroke-width="58" filter="url(#soft-glow)"/>
+  <ellipse cx="512" cy="512" rx="164" ry="248" fill="none" stroke="#ffffff" stroke-opacity="0.42" stroke-width="18"/>
+  <path d="M512 244 L554 460 L770 512 L554 564 L512 780 L470 564 L254 512 L470 460 Z" fill="#ffffff" opacity="0.92"/>
+  <path d="M512 326 L540 480 L698 512 L540 544 L512 698 L484 544 L326 512 L484 480 Z" fill="#05060a"/>
+  <circle cx="512" cy="512" r="38" fill="#ffffff"/>
+</svg>

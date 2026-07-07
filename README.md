@@ -150,7 +150,10 @@ A drag movement can be simulated from any of the above modes by focusing on the
 source and then pressing the `drag_key` (default `v`) which will cause normal
 mode to be activated for selection of the drag target.
 
-A more comprehensive description can be found in the [man page](warpd.1.md) (along with a list of options).
+A more comprehensive description can be found in the [man page](warpd.1.md)
+(along with a list of options). The internal cursor style can be changed with
+`cursor_style` (`square` or `crosshair`) while keeping the existing
+`cursor_color`, `cursor_border_color`, and `cursor_size` settings.
 
 ## Wayland
 

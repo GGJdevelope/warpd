@@ -134,6 +134,16 @@ void histfile_add(int x, int y);
 
 void init_mouse();
 
+enum cursor_style {
+	CURSOR_STYLE_SQUARE,
+	CURSOR_STYLE_CROSSHAIR,
+};
+
+enum cursor_style cursor_style_from_name(const char *name);
+void cursor_draw(screen_t scr, int x, int y, int sz, const char *color,
+		 const char *border_color, enum cursor_style style,
+		 int centered);
+
 const char *get_config_path(const char *file);
 const char *get_data_path(const char *file);
 void parse_config(const char *path);

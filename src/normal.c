@@ -16,15 +16,16 @@ static void redraw(screen_t scr, int x, int y, int hide_cursor)
 	const int indicator_size = (config_get_int("indicator_size") * sh) / 1080;
 	const char *indicator_color = config_get("indicator_color");
 	const char *curcol = config_get("cursor_color");
+	const char *curborder = config_get("cursor_border_color");
+	const enum cursor_style curstyle =
+		cursor_style_from_name(config_get("cursor_style"));
 	const char *indicator = config_get("indicator");
 	const int cursz = config_get_int("cursor_size");
 
 	platform->screen_clear(scr);
 
 	if (!hide_cursor)
-		platform->screen_draw_box(scr, x+1, y-cursz/2,
-				cursz, cursz,
-				curcol);
+		cursor_draw(scr, x, y, cursz, curcol, curborder, curstyle, 0);
 
 
 	if (!strcmp(indicator, "bottomleft"))

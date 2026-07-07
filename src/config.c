@@ -55,7 +55,9 @@ static struct {
 	{ "scroll_down", "e", "Scroll down key.", OPT_KEY },
 	{ "scroll_up", "r", "Scroll up key.", OPT_KEY },
 
-	{ "cursor_color", "#FF4500", "The color of the pointer in normal mode (rgba hex value).", OPT_STRING },
+	{ "cursor_color", "#000000", "The body color of the pointer in normal mode (rgba hex value).", OPT_STRING },
+	{ "cursor_border_color", "#ffffff", "The border color of the pointer in normal mode (rgba hex value).", OPT_STRING },
+	{ "cursor_style", "crosshair", "The shape of the internal pointer, one of: square, crosshair.", OPT_STRING },
 
 	{ "cursor_size", "7", "The height of the pointer in normal mode.", OPT_INT },
 	{ "repeat_interval", "20", "The number of milliseconds before repeating a movement event.", OPT_INT },
